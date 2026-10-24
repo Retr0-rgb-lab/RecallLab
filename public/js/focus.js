@@ -392,7 +392,18 @@ function updateCardContent(el, node) {
   if (titleHook && !isEditingHook(titleHook)) titleHook.textContent = node.title || '';
   if (bodyHook && !isEditingHook(bodyHook)) bodyHook.textContent = node.body || '';
   if (answerHook && !isEditingHook(answerHook)) answerHook.textContent = answerText;
-  emptyAnswer.hidden = hasAnswer;
+
+  if (node.kind === 'folder') {
+    // A folder has no answer, so "No answer recorded" would be nonsense here.
+    // The line earns its place only when the folder really is empty — that is
+    // also the feedback for the one case where descending cannot happen.
+    const kids = store.getChildren(node.id) || [];
+    emptyAnswer.textContent = 'This folder is empty — add a card in Edit Mode.';
+    emptyAnswer.hidden = kids.length > 0;
+  } else {
+    emptyAnswer.textContent = 'No answer recorded';
+    emptyAnswer.hidden = hasAnswer;
+  }
   if (remove) remove.setAttribute('aria-label', `Delete ${node.title}`);
 }
 

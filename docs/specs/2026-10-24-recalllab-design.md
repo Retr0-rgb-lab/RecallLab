@@ -52,6 +52,7 @@ the affected sections, before downstream work proceeds.
 | 2026-10-24 | **Build wave 1** — type tokens are sizes, not `font` shorthands; each step ships `--t-*` (size) plus `--lh-*`, `--fw-*`, `--track-*` companions | A `--t-*` declared as a `font` shorthand is invalid in `font-size: var(--t-*)` and silently falls back | §8.4, visual system §3 |
 | 2026-10-24 | **Build wave 3** — four integration defects closed: Postgres mode now applies the schema on boot; `focus.js` emits the `[data-edit]` hooks so Edit Mode works over a focused card; the `E` shortcut is bound; the spine collapse toggle sets `data-spine` | Six build agents wrote the parts independently and the parts had never been run together | §4.2.8, §4.3, §5.1, §6.1 |
 | 2026-10-24 | **Build wave 3** — font files renamed to `geist-latin-{400,500,600}.woff2` / `geist-mono-latin-400.woff2` | The files had been downloaded with a `-normal` suffix that neither `tokens.css` nor `index.html` referenced, so every font request was 404ing | visual system §3 |
+| 2026-10-24 | **Build wave 4** — the create control enters Edit Mode; the seed grew from 26 to 42 nodes; an empty folder now says so on the stage | The "New" button was visible and primary but did nothing unless Edit Mode was already on, because `edit.js` only acts while Edit Mode is active. The four `Part` folders were empty, so a demo that clicked into them landed on an empty grid | §4.3.2, §5.4 |
 
 ---
 
@@ -404,7 +405,7 @@ a floating window closes the window first (§4.2.5).
 |---|---|
 | `↑` / `↓` | Move focus to the previous / next sibling in the stack |
 | `Enter` / `Space` | Flip the focused card (reveal answer) |
-| `Esc` | Close top floating window → ascend a level → exit Focus Mode (in that order) |
+| `Esc` | Precedence rule, not a fixed sequence: close the top floating window if one is open → otherwise ascend one level → otherwise exit Focus Mode. Climbing out of nested folders therefore takes one `Esc` per level before Focus Mode closes. |
 | `E` | Toggle Edit Mode |
 
 **Touch.** Focus Mode on a touch device degrades to tap-only: tap to reveal, tap to descend, and the
@@ -442,12 +443,15 @@ answer are allowed.
 | Operation | Where | Behaviour |
 |---|---|---|
 | Create folder | File page, current level | `+` in the breadcrumb bar creates a folder in the level currently displayed |
-| Create card | File page, current level | `+` in the breadcrumb bar creates a card in the level currently displayed |
-| Rename | Any | Inline edit of the title |
+| Create card | File page, current level | `+` in the breadcrumb bar creates a card in the level currently displayed || Rename | Any | Inline edit of the title |
 | Edit body / answer | Any | Inline edit |
 | Delete | Any | Confirmation dialog (§4.3.4) |
 | Move to another folder | File page | Drag a tile onto a folder tile |
 | Reorder within a level | File page | Drag a tile to a new index among its siblings |
+
+**The create control implies Edit Mode.** The "New" button is visible on the file page whether or not
+Edit Mode is on, so clicking it turns Edit Mode on (the URL gains `?edit=1`, keeping the URL the
+single source of truth) and then opens the create menu. A visible primary button must never be dead.
 
 #### 4.3.3 Move across folders
 

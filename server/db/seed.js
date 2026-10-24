@@ -105,22 +105,138 @@ const TREE = [
           {
             id: nodeId(3, 1),
             title: 'Part I — Node.js Runtime',
-            children: [],
+            children: [
+              {
+                id: nodeId(6, 1),
+                title: 'Runtime',
+                body: 'What is Node.js, and what makes its concurrency model different from a browser’s?',
+                answer:
+                  'Node.js is JavaScript outside the browser — the V8 engine plus libuv, with an event-driven, non-blocking I/O model. One thread, many concurrent connections: the event loop waits on many operations at once instead of blocking on one. (Week 10 — the runtime.)',
+              },
+              {
+                id: nodeId(6, 2),
+                title: 'npm',
+                body: 'What does npm do, and which three commands do you use every day?',
+                answer:
+                  'npm is the package manager. `npm init` creates a project, `npm install <pkg>` adds a library, and package.json tracks every dependency. (Week 10 — the runtime, npm, modules, and your first real server.)',
+              },
+              {
+                id: nodeId(6, 3),
+                title: 'Modules',
+                body: 'How do you split Node.js code into reusable files?',
+                answer:
+                  'Modules. CommonJS uses require / module.exports; modern Node uses ES modules with import / export. Each file exports something and the other files import it, so code has one home and many users. (Week 10.)',
+              },
+              {
+                id: nodeId(6, 4),
+                title: 'HTTP Server',
+                body: 'What can Node.js do without any framework at all?',
+                answer:
+                  'The built-in http module turns any machine into a web server — http.createServer((req, res) => …) and server.listen(3000). No framework is needed for the basics. (Week 10 — your first real server.)',
+              },
+            ],
           },
           {
             id: nodeId(3, 2),
             title: 'Part II — Express · REST · CRUD & Data',
-            children: [],
+            children: [
+              {
+                id: nodeId(7, 1),
+                title: 'Express',
+                body: 'What is Express, and what are routes and middleware?',
+                answer:
+                  'Express is the de-facto web framework for Node. app.get(‘/path’, handler) maps a URL to a function; middleware chains reusable steps in order — logging, auth, JSON parsing. (Week 11.)',
+              },
+              {
+                id: nodeId(7, 2),
+                title: 'REST API',
+                body: 'What makes an API RESTful? Give the four verbs and what each one does.',
+                answer:
+                  'Resources exposed over HTTP. The URL names the thing and the verb names the action: GET /notes lists, POST creates, PUT /notes/1 updates, DELETE /notes/1 removes. (Week 11.)',
+              },
+              {
+                id: nodeId(7, 3),
+                title: 'CRUD',
+                body: 'What is CRUD, and how does it map onto a database?',
+                answer:
+                  'Create, Read, Update, Delete — the four operations every application performs, mapped one-to-one onto database actions. (Week 11 — Express, REST, CRUD, and wiring it all to a database.)',
+              },
+              {
+                id: nodeId(7, 4),
+                title: 'Database Integration',
+                body: 'How do routes talk to a database?',
+                answer:
+                  'Routes talk to SQL (SQLite, Postgres) or MongoDB. Drivers query, models shape, schemas validate — and your data finally persists. (Week 11.)',
+              },
+            ],
           },
           {
             id: nodeId(3, 3),
             title: 'Part III — Advanced Integration',
-            children: [],
+            children: [
+              {
+                id: nodeId(8, 1),
+                title: 'WebSocket',
+                body: 'What is a WebSocket, and how does one start?',
+                answer:
+                  'A persistent, full-duplex connection — the server can push updates any time, not only when asked. It starts as an ordinary HTTP request and then upgrades. (Week 12.)',
+              },
+              {
+                id: nodeId(8, 2),
+                title: 'Real-time',
+                body: 'Which applications need real-time, and what library wraps WebSocket for you?',
+                answer:
+                  'Chat, live scores, collaborative editing. Socket.IO wraps WebSocket with rooms, reconnection and fallbacks. (Week 12 — real-time, SPA, and putting your app in front of real users.)',
+              },
+              {
+                id: nodeId(8, 3),
+                title: 'SPA',
+                body: 'What is a Single-Page App, and how does it change navigation?',
+                answer:
+                  'One HTML page; JavaScript swaps the views. The app fetches data and re-renders instead of loading whole pages — history.pushState changes the URL without a reload. (Week 12.)',
+              },
+              {
+                id: nodeId(8, 4),
+                title: 'Deployment',
+                body: 'How do you get a Node app in front of real users?',
+                answer:
+                  'Ship the same Node app to the cloud — static on Netlify/Vercel, servers on Render/Fly, plus a real domain and HTTPS. Push to git, the cloud builds and serves. (Week 12.)',
+              },
+            ],
           },
           {
             id: nodeId(3, 4),
             title: 'Part IV — Performance & Optimization',
-            children: [],
+            children: [
+              {
+                id: nodeId(9, 1),
+                title: 'Caching',
+                body: 'What does caching achieve, and which three mechanisms implement it?',
+                answer:
+                  'Keep answers close: Cache-Control headers, ETags, and server-side caches such as Redis — a repeat visit skips the work. (Week 13.)',
+              },
+              {
+                id: nodeId(9, 2),
+                title: 'CDN',
+                body: 'What is a Content Delivery Network, and why does it make a site faster?',
+                answer:
+                  'Copies of your static files on edge servers worldwide, served from the one nearest each user — the request never crosses an ocean to reach your origin. (Week 13.)',
+              },
+              {
+                id: nodeId(9, 3),
+                title: 'HTTP/2 & HTTP/3',
+                body: 'What do HTTP/2 and HTTP/3 change about the way requests are sent?',
+                answer:
+                  'Multiplexing — many requests over one connection; header compression; and HTTP/3 goes even further, over QUIC on UDP. (Week 13.)',
+              },
+              {
+                id: nodeId(9, 4),
+                title: 'Measure First',
+                body: 'How do you decide what to optimize?',
+                answer:
+                  'Measure first. Lighthouse and the Network tab give you numbers — optimize what the data says, not what you guess. (Week 13 — the final polish on your project.)',
+              },
+            ],
           },
           {
             id: nodeId(3, 5),

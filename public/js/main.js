@@ -28,33 +28,41 @@ import { focus } from './focus.js';
  * ------------------------------------------------------------------------ */
 
 let editModule = null;
-let editLoadAttempted = false;
+let editModulePromise = null;
 
 /**
  * Import `edit.js` on demand. It is loaded lazily because a static import of
  * a module that does not exist yet would stop the whole application from
  * booting, and because Edit Mode is not needed to browse the tree.
+ *
+ * The in-flight promise is shared, so a second caller that arrives while the
+ * module is still loading waits for the SAME load instead of concluding that
+ * the module is unavailable and taking the fallback path.
  * @returns {Promise<{setActive: Function, isActive: Function}|null>}
  */
 async function loadEditModule() {
   if (editModule) return editModule;
-  if (editLoadAttempted) return null;
+  if (editModulePromise) return editModulePromise;
 
-  editLoadAttempted = true;
+  editModulePromise = import('./edit.js')
+    .then((mod) => {
+      editModule = mod?.edit ?? null;
+      if (!editModule) {
+        console.warn('[main] edit.js does not export an `edit` object; Edit Mode stays off.');
+      }
+      return editModule;
+    })
+    .catch((err) => {
+      console.warn(
+        `[main] edit.js could not be loaded (${err?.message ?? err}); Edit Mode stays off.`,
+      );
+      return null;
+    })
+    .finally(() => {
+      editModulePromise = null;
+    });
 
-  try {
-    const mod = await import('./edit.js');
-    editModule = mod?.edit ?? null;
-    if (!editModule) {
-      console.warn('[main] edit.js does not export an `edit` object; Edit Mode stays off.');
-    }
-  } catch (err) {
-    console.warn(
-      `[main] edit.js could not be loaded (${err?.message ?? err}); Edit Mode stays off.`,
-    );
-  }
-
-  return editModule;
+  return editModulePromise;
 }
 
 /**
@@ -346,28 +354,51 @@ function onEditClick() {
 }
 
 async function onCreateClick() {
-  // `edit.js` owns the create control (contracts §4.7): it opens a create
-  // menu from a delegated listener. Until that module exists, this fallback
-  // creates a folder in the level on screen through the store, so the control
-  // is never dead.
-  if (editModule) return;
+  // `edit.js` owns the create control (contracts §4.7): it opens a create menu
+  // from a delegated, capture-phase document listener. That listener only acts
+  // while Edit Mode is on — and while Edit Mode is on it stops the click before
+  // it can ever reach this listener. So this listener only ever runs with Edit
+  // Mode OFF.
+  //
+  // The button is visible and primary, so it must not be dead: switch Edit Mode
+  // on — the URL stays the single source of truth — and then hand the click to
+  // edit.js, which opens the create menu.
+  //
+  // A click that arrives while the module is still loading joins the in-flight
+  // load. Only the click that actually started the load hands over, so a
+  // double-click cannot open the menu twice.
+  const joined = editModulePromise !== null;
 
   const mod = await loadEditModule();
-  if (mod) {
-    // `edit.js` binds the control when it is imported. The click that
-    // triggered the import has already been dispatched, so hand it over.
-    dom.createButton?.click();
+
+  if (!mod) {
+    // edit.js never arrived: create a folder directly so the control is never
+    // dead.
+    try {
+      await store.createNode({
+        parentId: store.getCurrentFolderId(),
+        kind: 'folder',
+        title: 'New folder',
+      });
+    } catch (err) {
+      store.reportError(err);
+    }
     return;
   }
 
-  try {
-    await store.createNode({
-      parentId: store.getCurrentFolderId(),
-      kind: 'folder',
-      title: 'New folder',
-    });
-  } catch (err) {
-    store.reportError(err);
+  if (!store.isEditMode()) {
+    mod.setActive(true);
+    const target = new URL(window.location.href);
+    target.searchParams.set('edit', '1');
+    router.navigate(`${target.pathname}${target.search}`);
+  }
+
+  // The click that triggered the import has already been dispatched, and
+  // edit.js only acts once Edit Mode is on — so hand it over. Wait one frame
+  // first so the navigation has finished re-rendering the toolbar.
+  if (!joined) {
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    dom.createButton?.click();
   }
 }
 
