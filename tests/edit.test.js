@@ -265,6 +265,17 @@ export const store = {
   isEditMode() { return false; },
   getFocusId() { return focusId; },
   getCurrentFolderId() { return currentFolderId; },
+  getPathOf(id) {
+    const chain = [];
+    let current = id ? NODES.get(id) : undefined;
+    let hops = 0;
+    while (current && hops < 64) {
+      chain.unshift(current);
+      current = current.parentId ? NODES.get(current.parentId) : undefined;
+      hops += 1;
+    }
+    return chain;
+  },
 
   async loadTree() {
     const payload = await request('GET', '/api/tree');

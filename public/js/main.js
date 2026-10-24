@@ -20,7 +20,7 @@
  */
 
 import { store } from './store.js';
-import { mountFilePage, unmountFilePage } from './filepage.js';
+import { mountFilePage, unmountFilePage, renderChrome } from './filepage.js';
 import { focus } from './focus.js';
 
 /* ---------------------------------------------------------------------------
@@ -411,9 +411,13 @@ function render() {
   const mode = store.getMode();
 
   if (mode === 'focus') {
-    // The stage covers the viewport, so the file page is torn down. It is
+    // The stage covers the viewport, so the tile grid is torn down. It is
     // rebuilt when Focus Mode is left.
     unmountFilePage();
+    // The spine and the breadcrumb stay in step with the level that is on
+    // stage, rather than pointing at the level the stage was entered from
+    // (design §4.2.7).
+    renderChrome(focus.getLevelId());
   } else {
     mountFilePage(dom.grid);
   }
@@ -427,7 +431,7 @@ function announce() {
   if (!live) return;
 
   if (store.getMode() === 'focus') {
-    const node = store.getNode(store.getFocusId());
+    const node = store.getNode(focus.getFocusedId());
     live.textContent = node ? `Focus mode: ${node.title}` : 'Focus mode';
     return;
   }
@@ -568,6 +572,15 @@ async function boot() {
   dom.live = document.getElementById('stage-live');
 
   buildToolbar();
+
+  /* The stage owns the focus. This mirrors it into the path indicator and
+     the live region, so both follow the card the user is on: without it the
+     breadcrumb and the announcement only ever described the state the stage
+     was entered with (design §4.2.7 and §11). */
+  focus.subscribe(() => {
+    renderChrome(focus.getLevelId());
+    announce();
+  });
 
   /* The spine starts the way the layout wants it: a column on a wide screen,
      a closed drawer on a narrow one. */

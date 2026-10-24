@@ -104,6 +104,17 @@ export const store = {
   isEditMode() { return false; },
   getFocusId() { return focusId; },
   getCurrentFolderId() { return currentFolderId; },
+  getPathOf(id) {
+    const chain = [];
+    let current = id ? NODES.get(id) : undefined;
+    let hops = 0;
+    while (current && hops < 64) {
+      chain.unshift(current);
+      current = current.parentId ? NODES.get(current.parentId) : undefined;
+      hops += 1;
+    }
+    return chain;
+  },
   async loadTree() { return store.getTree(); },
   async loadLevel(parentId) { currentFolderId = parentId ?? null; return store.getLevel(); },
   async createNode({ parentId, kind, title, body = '', answer = '' }) {

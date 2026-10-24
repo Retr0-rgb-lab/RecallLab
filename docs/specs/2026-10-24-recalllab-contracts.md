@@ -263,6 +263,7 @@ export const store = {
   getLevel(),               // -> Node[]  (children of the current folder)
   getNode(id),              // -> Node | undefined
   getChildren(parentId),     // -> Node[]
+  getPathOf(id),            // -> Node[]  root-first ancestor chain of ANY node, the node included
   getMode(),                // -> 'file' | 'focus'
   isEditMode(),             // -> boolean
   getFocusId(),             // -> string | null

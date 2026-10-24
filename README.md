@@ -36,8 +36,11 @@ Three functions make up the product:
 - **Hold to float** — press and hold 450ms and the card lifts out of the stack into a draggable
   floating window; focus moves to the next sibling.
 - **Drill down** — focusing a folder and activating it descends into that folder. `Esc` ascends.
+- **Path indicator** — the stage covers the viewport, so it carries the path of the level on stage
+  at the top centre, in mono. The toolbar breadcrumb and the spine stay in step with it in the DOM.
 - Keyboard: `↑`/`↓` move between siblings, `Enter`/`Space` flips the card, `Esc` closes a floating
-  window, then ascends a level, then exits Focus Mode.
+  window, then ascends a level, then exits Focus Mode. Focus is trapped inside the stage, and a
+  polite live region announces the focused card whenever it changes.
 
 Focus Mode records nothing. There is no score, no review history, and no scheduling.
 

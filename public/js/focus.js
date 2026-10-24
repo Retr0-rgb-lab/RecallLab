@@ -39,7 +39,9 @@ const state = {
   stage: null,
   stackEl: null,
   pipsEl: null,
+  pathEl: null,
   rootEl: null,
+  listeners: new Set(), // notified when the level or the focused node changes
   cards: new Map(), // node id -> card element
   floatingEls: new Set(), // card elements kept alive for an in-flight gesture
   flyingEls: new Set(), // card elements thrown off the stage
@@ -250,16 +252,19 @@ function mountStage(root) {
   const stack = document.createElement('div');
   stack.className = 'stage-stack';
 
+  const path = document.createElement('div');
+  path.className = 'stage-path';
+
   const pips = document.createElement('div');
   pips.className = 'stage-pips';
 
-  stage.appendChild(stack);
-  stage.appendChild(pips);
+  stage.append(path, stack, pips);
   root.appendChild(stage);
 
   state.stage = stage;
   state.stackEl = stack;
   state.pipsEl = pips;
+  state.pathEl = path;
 }
 
 function unmountStage() {
@@ -283,6 +288,7 @@ function createCardElement(node) {
   const article = document.createElement('article');
   article.className = 'stage-card';
   article.dataset.id = node.id;
+  article.dataset.kind = node.kind;
   article.dataset.depth = '0';
 
   const inner = document.createElement('div');
@@ -321,7 +327,6 @@ function createCardElement(node) {
   remove.dataset.action = 'delete';
   remove.dataset.gestureIgnore = '';
   remove.setAttribute('aria-label', `Delete ${node.title}`);
-
   const dismiss = document.createElement('button');
   dismiss.type = 'button';
   dismiss.className = 'stage-card-dismiss';
@@ -404,7 +409,14 @@ function updateCardContent(el, node) {
     emptyAnswer.textContent = 'No answer recorded';
     emptyAnswer.hidden = hasAnswer;
   }
-  if (remove) remove.setAttribute('aria-label', `Delete ${node.title}`);
+  if (remove) {
+    remove.setAttribute('aria-label', `Delete ${node.title}`);
+    /* Outside Edit Mode the delete control does nothing, so it must not be
+       visible or reachable: the stage is read-only until Edit Mode is on
+       (design §4.3). `store.setEditMode()` notifies, the store subscription
+       re-renders the stack, and this flips the control. */
+    remove.hidden = !store.isEditMode();
+  }
 }
 
 /** The nodes that make up the visible stack: the focused card + 3 siblings. */
@@ -941,6 +953,7 @@ function setFocus(nodeId, { velocity = { vx: 0, vy: 0 } } = {}) {
   state.focusedId = nodeId;
   state.flipped = false;
   relayoutStack({ animate: true, velocity });
+  notify();
   return true;
 }
 
@@ -990,6 +1003,8 @@ function descend() {
   state.focusedId = children[0].id;
   state.flipped = false;
   relayoutStack({ animate: true, velocity: { vx: 0, vy: 0 } });
+  renderStagePath();
+  notify();
   return true;
 }
 
@@ -1001,6 +1016,8 @@ function ascend() {
   state.focusedId = parentId;
   state.flipped = false;
   relayoutStack({ animate: true, velocity: { vx: 0, vy: 0 } });
+  renderStagePath();
+  notify();
   return true;
 }
 
@@ -1047,6 +1064,41 @@ function handleKeyDown(ev) {
       ev.preventDefault();
       activateFocused();
       break;
+    case 'Tab': {
+      if (isEditable) return;
+      /* Focus Mode traps focus inside the stage. The stage covers the
+         viewport, so the toolbar and the spine sit UNDER it: letting Tab
+         reach them would move the focus ring somewhere the user cannot see.
+         (design §11 — "Focus Mode traps focus inside the stage".) */
+      const stops = stageFocusables();
+      const active = document.activeElement;
+
+      if (stops.length === 0) {
+        /* Nothing inside the stage can take focus (outside Edit Mode the
+           card's controls are hidden), so the stage itself holds the focus and
+           Tab does nothing rather than letting it escape to the toolbar,
+           which sits under the overlay. */
+        ev.preventDefault();
+        state.stage?.focus?.({ preventScroll: true });
+        return;
+      }
+
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const onStage = Boolean(active && state.stage?.contains(active));
+
+      if (!onStage || active === state.stage) {
+        ev.preventDefault();
+        (ev.shiftKey ? last : first).focus();
+      } else if (active === last && !ev.shiftKey) {
+        ev.preventDefault();
+        first.focus();
+      } else if (active === first && ev.shiftKey) {
+        ev.preventDefault();
+        last.focus();
+      }
+      break;
+    }
     case 'Escape':
       ev.preventDefault();
       // Precedence: close the top floating window, then ascend, then exit.
@@ -1072,6 +1124,70 @@ function subscribeToStore() {
     if (!state.active || state.dragging) return;
     renderStack();
   });
+}
+
+/**
+ * Tell the subscribers that the level, or the focused node, changed.
+ *
+ * `main.js` uses this to keep the path indicator and the live region in step
+ * with the stage (design §4.2.7 and §11). Without it, the breadcrumb and the
+ * live region only ever described the state the stage was entered with.
+ */
+function notify() {
+  for (const fn of state.listeners) {
+    try {
+      fn();
+    } catch (err) {
+      console.error('[focus] a listener failed', err);
+    }
+  }
+}
+
+/**
+ * The focusable elements inside the stage, in DOM order.
+ * @returns {HTMLElement[]}
+ */
+function stageFocusables() {
+  const stage = state.stage;
+  if (!stage) return [];
+
+  const selector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(',');
+
+  return Array.from(stage.querySelectorAll(selector)).filter(
+    (el) => !el.hidden
+      && el.getAttribute('aria-hidden') !== 'true'
+      /* `display:none` elements still match the selector, but they cannot
+         take focus — `getClientRects()` is empty for them. */
+      && el.getClientRects().length > 0,
+  );
+}
+
+/**
+ * Paint the path of the level that is on stage, inside the stage itself.
+ *
+ * The stage covers the viewport, so the breadcrumb in the toolbar is not
+ * visible while Focus Mode is on. This is the indicator the user actually
+ * sees: where am I in the tree.
+ */
+function renderStagePath() {
+  const el = state.pathEl;
+  if (!el) return;
+
+  const levelId = state.levelId;
+  const path = levelId ? store.getPathOf(levelId) : [];
+  const label = path.length
+    ? path.map((node) => node.title).join('  ›  ')
+    : 'Root level';
+
+  el.textContent = label;
+  el.hidden = false;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1105,6 +1221,7 @@ export const focus = {
 
     mountStage(root);
     renderStack();
+    renderStagePath();
 
     subscribeToStore();
 
@@ -1113,6 +1230,7 @@ export const focus = {
     document.addEventListener('keydown', state.keyHandler);
 
     state.stage?.focus?.({ preventScroll: true });
+    notify();
   },
 
   exit() {
@@ -1138,10 +1256,31 @@ export const focus = {
     state.flipped = false;
 
     document.documentElement.setAttribute('data-register', 'browse');
+    notify();
   },
 
   getFocusedId() {
     return state.focusedId;
+  },
+
+  /**
+   * The folder whose children are on stage (null = the root level).
+   * The path indicator and the live region are driven from this.
+   * @returns {string|null}
+   */
+  getLevelId() {
+    return state.levelId;
+  },
+
+  /**
+   * Be told when the level, or the focused node, changes.
+   * @param {Function} fn
+   * @returns {Function} unsubscribe
+   */
+  subscribe(fn) {
+    if (typeof fn !== 'function') return () => {};
+    state.listeners.add(fn);
+    return () => state.listeners.delete(fn);
   },
 
   advance(delta) {

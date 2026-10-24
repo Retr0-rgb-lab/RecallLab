@@ -53,6 +53,26 @@
    The stack — focused card plus up to three siblings behind it
    -------------------------------------------------------------------------- */
 
+/* The path of the level on stage. The stage covers the viewport, so the
+   breadcrumb in the toolbar cannot be seen while Focus Mode is on — this is
+   the indicator the user actually reads (design §4.2.7). */
+.stage-path {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(720px, 100vw - 96px);
+  font-family: var(--font-mono, "Geist Mono", ui-monospace, Menlo, monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 .stage-stack {
   position: relative;
   width: min(720px, 100vw - 96px);
@@ -269,6 +289,13 @@
 .stage-card-delete:hover {
   background: var(--surface-hover);
   color: var(--ink-2);
+}
+
+/* `hidden` alone loses to the `display: inline-flex` above, so the attribute
+   has to be honoured explicitly — the control is hidden outside Edit Mode,
+   where it would otherwise be visible and inert. */
+.stage-card-delete[hidden] {
+  display: none;
 }
 
 /* The dismiss control is the coarse-pointer replacement for the drag gesture. */

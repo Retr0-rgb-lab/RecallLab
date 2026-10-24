@@ -424,13 +424,13 @@ function describeError(error) {
 /**
  * Paint the whole tree into the spine, with the current path marked.
  */
-function renderSpine() {
+function renderSpine(folderId = store.getCurrentFolderId()) {
   const container = document.getElementById('spine-tree');
   if (!container) return;
 
   const tree = store.getTree();
-  const currentPath = new Set(store.getPath().map((node) => node.id));
-  const currentFolderId = store.getCurrentFolderId();
+  const currentPath = new Set(store.getPathOf(folderId).map((node) => node.id));
+  const currentFolderId = folderId;
 
   const parentsWithChildren = new Set();
   for (const node of tree) {
@@ -490,11 +490,11 @@ function renderSpine() {
  * `layout.css` (`.crumb + .crumb::before`), so no separator element is
  * rendered here.
  */
-function renderBreadcrumb() {
+function renderBreadcrumb(folderId = store.getCurrentFolderId()) {
   const nav = document.getElementById('breadcrumb');
   if (!nav) return;
 
-  const path = store.getPath();
+  const path = store.getPathOf(folderId);
   const frag = document.createDocumentFragment();
 
   const truncated = path.length > MAX_CRUMB_SEGMENTS;
@@ -685,6 +685,22 @@ export function unmountFilePage() {
   dom.banner?.remove();
   dom.banner = null;
 
-  document.getElementById('spine-tree')?.replaceChildren();
-  document.getElementById('breadcrumb')?.replaceChildren();
+  /* The spine and the breadcrumb are NOT cleared here. Focus Mode needs them
+     to keep showing the level that is on stage (design §4.2.7), and the file
+     page re-renders them when it is mounted again. */
+}
+
+/**
+ * Re-render the spine and the breadcrumb for a given level.
+ *
+ * Focus Mode calls this with the level that is on stage, which is one level
+ * deeper than the file page's own level once the user descends. The path
+ * indicator therefore stays in step with the tree as the user moves through
+ * it, instead of pointing at the folder the stage was entered from.
+ *
+ * @param {string|null} folderId the folder whose path to show; null = root
+ */
+export function renderChrome(folderId = null) {
+  renderSpine(folderId);
+  renderBreadcrumb(folderId);
 }

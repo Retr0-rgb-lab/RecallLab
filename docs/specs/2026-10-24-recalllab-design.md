@@ -53,6 +53,7 @@ the affected sections, before downstream work proceeds.
 | 2026-10-24 | **Build wave 3** — four integration defects closed: Postgres mode now applies the schema on boot; `focus.js` emits the `[data-edit]` hooks so Edit Mode works over a focused card; the `E` shortcut is bound; the spine collapse toggle sets `data-spine` | Six build agents wrote the parts independently and the parts had never been run together | §4.2.8, §4.3, §5.1, §6.1 |
 | 2026-10-24 | **Build wave 3** — font files renamed to `geist-latin-{400,500,600}.woff2` / `geist-mono-latin-400.woff2` | The files had been downloaded with a `-normal` suffix that neither `tokens.css` nor `index.html` referenced, so every font request was 404ing | visual system §3 |
 | 2026-10-24 | **Build wave 4** — the create control enters Edit Mode; the seed grew from 26 to 42 nodes; an empty folder now says so on the stage | The "New" button was visible and primary but did nothing unless Edit Mode was already on, because `edit.js` only acts while Edit Mode is active. The four `Part` folders were empty, so a demo that clicked into them landed on an empty grid | §4.3.2, §5.4 |
+| 2026-10-24 | **Build wave 5** — acceptance audit findings closed: the breadcrumb and spine now track the level on stage (V-13); the stage carries its own path indicator; Focus Mode traps focus inside the stage; the live region follows every focus move; the stage delete control is hidden outside Edit Mode; only the 400 font weight is preloaded; the document has one `<h1>` | An independent audit of the 24-item matrix found one failure and three accessibility defects outside the matrix. The stage covers the viewport, so the toolbar chrome could not be seen — the path indicator moves it into the stage where it can be read | §4.2.7, §4.3, §10, §11 |
 
 ---
 
@@ -396,6 +397,12 @@ When the focused node is a **folder**, clicking it **descends**: the stage swaps
 level, the spine and breadcrumb update, and the focus moves to that folder's first child. This is the
 "逐层下钻" behaviour — the tree is navigated by focusing, not by opening a dialog.
 
+The stage covers the viewport, so the toolbar breadcrumb is not visible while Focus Mode is on. The
+stage therefore carries **its own path indicator** (`.stage-path`, top centre, mono, muted): the path
+of the level on stage, updated on every descend and ascend. The toolbar breadcrumb and the spine are
+kept in step with the same level in the DOM, so assistive technology and the keyboard always have a
+path to read.
+
 Pressing `Esc` ascends one level: back to the parent folder, with the parent folder focused. `Esc` on
 a floating window closes the window first (§4.2.5).
 
@@ -443,7 +450,8 @@ answer are allowed.
 | Operation | Where | Behaviour |
 |---|---|---|
 | Create folder | File page, current level | `+` in the breadcrumb bar creates a folder in the level currently displayed |
-| Create card | File page, current level | `+` in the breadcrumb bar creates a card in the level currently displayed || Rename | Any | Inline edit of the title |
+| Create card | File page, current level | `+` in the breadcrumb bar creates a card in the level currently displayed |
+| Rename | Any | Inline edit of the title |
 | Edit body / answer | Any | Inline edit |
 | Delete | Any | Confirmation dialog (§4.3.4) |
 | Move to another folder | File page | Drag a tile onto a folder tile |
@@ -941,7 +949,7 @@ These are the Week 13 targets, and they are the acceptance criteria for §13.
 | INP | < 150ms | Animation on `transform`/`opacity` only; no long tasks on input |
 | First-load JS | ≤ 80KB uncompressed | ES modules, no dependencies |
 | First-load CSS | ≤ 30KB uncompressed | Four small files |
-| Fonts | ≤ 40KB | Latin-subset woff2, self-hosted, preloaded |
+| Fonts | 13 KB on the critical path | Latin-subset woff2, self-hosted. Only the 400 weight is preloaded — it is the one the body text uses. The 500, 600 and mono faces load on demand; all four together are 48 KB and are not on the critical path. |
 | API — level fetch | 1 query | `nodes_parent_position_idx`; no N+1 |
 | API — tree fetch | 1 query | Whole tree in one request for the spine |
 
@@ -966,7 +974,7 @@ Additional rules:
 | Contrast | Body text ≥ 7:1, secondary ≥ 4.5:1. The accent is never used for text on a light surface. |
 | `prefers-reduced-motion` | Springs and flips become 120ms opacity cross-fades; the drag still works, without velocity inheritance. |
 | Live region | The stage announces the focused node's title when focus moves, via `aria-live="polite"`. |
-| Semantics | Cards are `<button>` in the grid and `<article>` on stage; the grid is a `<ul>`/`<li>` list. |
+| Semantics | Grid tiles are list items with `role="button"` and `tabindex="0"` inside a `<ul>` — a tile carries an icon, a title and a preview, and a list of them is a list to a screen reader; the stage card is an `<article>`. The document has one visually hidden `<h1>`, so the heading order is well formed. |
 | Touch targets | Interactive elements are at least 44×44px on coarse pointers. |
 | Zoom | Usable at 200% zoom without horizontal scrolling of the page body. |
 

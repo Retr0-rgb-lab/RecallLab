@@ -15,6 +15,11 @@
       The four self-hosted latin-subset faces (contracts §7). `crossorigin` is
       required: font requests are made in CORS-anonymous mode, so a preload
       without it would be fetched twice.
+
+      Only the 400 weight is preloaded. It is the one the body text uses, so it
+      is the one on the critical path; the 500, 600 and mono faces are fetched
+      on demand when they are first used. Preloading all four put 48 KB of
+      fonts on the critical path against a 40 KB budget (§10).
     -->
     <link
       rel="preload"
@@ -22,27 +27,6 @@
       type="font/woff2"
       crossorigin
       href="/fonts/geist-latin-400.woff2"
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      href="/fonts/geist-latin-500.woff2"
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      href="/fonts/geist-latin-600.woff2"
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      href="/fonts/geist-mono-latin-400.woff2"
     />
 
     <!--
@@ -63,6 +47,27 @@
       these ids and must not restructure the page.
     -->
     <div id="app">
+      <!--
+        The page has no visible heading of its own — the file page is a grid of
+        tiles — so the document gets one for assistive technology and for the
+        heading-order check. It is visually hidden, but not `display:none`.
+      -->
+      <h1
+        style="
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          margin: -1px;
+          padding: 0;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
+          border: 0;
+        "
+      >
+        RecallLab
+      </h1>
+
       <aside id="spine" aria-label="Outline">
         <div id="spine-tree"></div>
       </aside>
