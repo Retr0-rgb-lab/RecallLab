@@ -482,10 +482,8 @@ Rules:
 One table. A node's kind is a discriminator column; the tree structure is an adjacency list.
 
 ```sql
-create extension if not exists "pgcrypto";
-
 create table nodes (
-  id          uuid primary key default gen_random_uuid(),
+  id          uuid primary key,                          -- generated in the app: crypto.randomUUID()
   parent_id   uuid references nodes(id) on delete cascade,
   kind        text    not null check (kind in ('folder', 'card')),
   title       text    not null check (length(btrim(title)) > 0),
@@ -502,6 +500,15 @@ create index nodes_parent_idx on nodes (parent_id);
 
 `parent_id is null` means "top level". The seed has a single root; the schema permits a forest, which
 costs nothing and avoids a special case.
+
+**Amendment 2026-10-24 (build wave 1).** The original §5.1 schema declared
+`create extension if not exists "pgcrypto"` and `id uuid primary key default gen_random_uuid()`. Both
+were dropped: the build contract requires the *same* schema to run on real Postgres and on the
+in-memory Postgres used for zero-dependency local development, and neither supports `pgcrypto`.
+UUIDs are now generated in the application with `crypto.randomUUID()`, and the application performs
+the cascade delete explicitly (children first, parent last, one transaction) rather than relying on
+`ON DELETE CASCADE` — the constraint stays as a production safety net. `schema.sql` in the repository
+is the authority. See [`2026-10-24-recalllab-contracts.md`](./2026-10-24-recalllab-contracts.md) §2.1.
 
 ### 5.2 Queries
 
