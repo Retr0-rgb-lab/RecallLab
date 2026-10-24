@@ -96,6 +96,10 @@ RecallLab produces a required course artifact: the **initial project outline**, 
 The abstract is written **from §1.1, §3, and §4 of this document** once the design is frozen. The
 deliverable is produced after this spec, not before it.
 
+**Produced 2026-10-24** — `docs/submissions/Huang_Haoran_24101322D_outline.pdf`, one A4 page, with the
+regenerable HTML source beside it. Final title: *RecallLab — A Spatial Recall Reader for Hierarchical
+Course Material*.
+
 ---
 
 ## 2. Scope
@@ -1014,13 +1018,13 @@ Every hard constraint in this document has a check. A constraint without a check
 | R-03 | The course's full project brief (lab column) has not been read | Medium — may contain requirements this spec misses | **Open.** Obtain the course overview and check this spec against it before P0 |
 | R-04 | Vercel Function + `express.static()` | Medium — static assets 404 in production | Documented twice (§7.1, §9.1) and checked by V-20 |
 | R-05 | P3 (Focus Mode) is 3 weeks of a 13-week course | Medium | P3 prototyped in P0/P1 slack; P6 quality work is the only thing cut first if late |
-| R-06 | Group membership and student IDs unknown | Low — blocks only the outline PDF | **Open.** Needed before §1.3's deliverable |
+| R-06 | Group membership and student IDs unknown | Low — blocks only the outline PDF | **Resolved 2026-10-24.** Single member: Huang Haoran, 24101322D. Outline produced. |
 
 ### Open items
 
 1. The full COMP3421 final-project brief (the "lab" column of the course overview) — to validate §2.
-2. Group members, student IDs, and the final project title — needed for the outline PDF filename and
-   abstract header.
+2. ~~Group members, student IDs, and the final project title~~ — **resolved 2026-10-24**: Huang Haoran,
+   24101322D; title as recorded in §1.3.
 3. Whether the course requires a particular database among the permitted set. Supabase is Postgres and
    is on the permitted list; confirm if the brief narrows it.
 

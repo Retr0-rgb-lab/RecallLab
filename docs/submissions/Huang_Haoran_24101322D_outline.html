@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Huang_Haoran_24101322D_outline</title>
+<style>
+  @page { size: A4 portrait; margin: 13mm 24mm 11mm 24mm; }
+
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  html { background: #d0d0d0; }
+
+  body {
+    margin: 0;
+    padding: 20px 0;
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #18181B;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 20px;
+    padding: 13mm 24mm 11mm;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    overflow: hidden;
+  }
+
+  @media print {
+    html { background: #fff; }
+    body { padding: 0; }
+    .page { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-top: 2.5pt solid #E8A33D; padding-top: 7pt; }
+
+  .mast-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 8pt;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+    color: #71717A;
+  }
+  .mast-row .mono { font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace; }
+
+  h1 {
+    margin: 8pt 0 0;
+    font-size: 18pt;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
+  }
+  .mast-sub { margin: 3pt 0 0; font-size: 9.5pt; color: #71717A; }
+  .hairline { height: 0.5pt; background: #E4E4E7; margin: 8pt 0 0; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 10pt; }
+  section:first-of-type { margin-top: 12pt; }
+
+  .sec-head {
+    display: flex; align-items: flex-start; gap: 6pt;
+    margin-bottom: 5pt;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .sec-mark { width: 3pt; height: 12pt; background: #E8A33D; border-radius: 1.5pt; flex: 0 0 3pt; margin-top: 1.5pt; }
+  .sec-num {
+    font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 8.5pt; letter-spacing: .06em; color: #A1A1AA; padding-top: 1.5pt;
+  }
+  h2 {
+    margin: 0;
+    font-size: 10pt;
+    font-weight: 600;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+    color: #18181B;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .sec-meta {
+    margin-left: auto;
+    font-size: 8.5pt;
+    color: #A1A1AA;
+    padding-top: 1pt;
+    text-align: right;
+  }
+
+  /* ---------- group info table ---------- */
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left; vertical-align: top;
+    padding: 4.5pt 8pt;
+    font-size: 9.5pt;
+    border-bottom: 0.5pt solid #E4E4E7;
+  }
+  thead th {
+    background: #F4F4F5;
+    font-size: 8pt; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: #52525B;
+    border-bottom: 0.5pt solid #D4D4D8;
+  }
+  td.mono, th.mono { font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace; }
+
+  /* ---------- project title ---------- */
+  .title-block {
+    margin: 0; padding: 5pt 0 0;
+    font-size: 14pt; font-weight: 600; letter-spacing: -0.018em; line-height: 1.28;
+  }
+  .title-desc { margin-top: 3pt; font-size: 9.5pt; color: #52525B; }
+
+  /* ---------- abstract ---------- */
+  .abstract p {
+    margin: 0 0 5.5pt;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+  .abstract p:last-child { margin-bottom: 0; }
+
+  /* ---------- implementation colophon ---------- */
+  #sec-implementation { page-break-inside: avoid; break-inside: avoid; }
+  .impl-line {
+    margin: 0;
+    padding-top: 1pt;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    color: #18181B;
+  }
+  .impl-line .k {
+    font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 7.5pt; letter-spacing: .09em; text-transform: uppercase; color: #A1A1AA;
+  }
+  .impl-line .sep { color: #D4D4D8; padding: 0 3pt; }
+
+  /* ---------- footer ---------- */
+  .foot {
+    margin-top: 10pt; padding-top: 4pt;
+    border-top: 0.5pt solid #E4E4E7;
+    display: flex; justify-content: space-between;
+    font-size: 8pt; color: #A1A1AA;
+  }
+  .foot .mono { font-family: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace; }
+</style>
+</head>
+<body>
+<section class="page">
+
+  <header class="masthead">
+    <div class="mast-row">
+      <span class="mono">COMP3421 &middot; Web Application Design and Development</span>
+      <span>Initial Project Outline</span>
+    </div>
+    <h1>Final Project &mdash; Initial Outline</h1>
+    <p class="mast-sub">The Hong Kong Polytechnic University &middot; 24 October 2026</p>
+    <div class="hairline"></div>
+  </header>
+
+  <section id="sec-group">
+    <div class="sec-head">
+      <span class="sec-mark"></span>
+      <span class="sec-num">01</span>
+      <h2>Group Information</h2>
+      <span class="sec-meta">Group size: 1 member (the course permits 1&ndash;2)</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:46%">Member Name</th>
+          <th style="width:28%">Student ID</th>
+          <th style="width:26%">Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Huang Haoran</td>
+          <td class="mono">24101322D</td>
+          <td>Developer &amp; designer</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="sec-title">
+    <div class="sec-head">
+      <span class="sec-mark"></span>
+      <span class="sec-num">02</span>
+      <h2>Project Title</h2>
+    </div>
+    <p class="title-block">RecallLab &mdash; A Spatial Recall Reader for Hierarchical Course Material</p>
+    <p class="title-desc">A full-stack web application for recalling structured study material by navigating it as a file system.</p>
+  </section>
+
+  <section id="sec-abstract">
+    <div class="sec-head">
+      <span class="sec-mark"></span>
+      <span class="sec-num">03</span>
+      <h2>Abstract &mdash; The Functions of RecallLab</h2>
+    </div>
+    <div class="abstract">
+      <p>Existing study tools flatten course material into shuffled decks of isolated questions, discarding the structure a learner actually uses as a retrieval cue &mdash; the lecture, the section, the topic a concept belongs to. RecallLab keeps that structure and makes it the interface: material is stored as a tree of folders and cards, each card carrying a prompt on its face and an answer on its back, and the learner moves through that tree spatially.</p>
+      <p>Three functions define the product. First, hierarchical browsing: a spine shows the entire tree, a breadcrumb shows the current path, and the main area tiles the current level, with folders and cards visually distinguished. Built on the History API, every level is addressable by URL, the back button means &ldquo;ascend one level&rdquo;, and any folder can be shared as a deep link.</p>
+      <p>Second, Focus Mode. Entering it narrows the screen to a single card on a dark stage while the rest of the level recedes into a stack behind it. Clicking the card flips it to reveal the answer. Dragging it away throws it off the stage and lets the next sibling rise into focus, carrying the velocity of the gesture. Holding it for 450 milliseconds pulls it out into a floating window that hovers above the focused card and can be dragged anywhere, while focus moves on. When the focused item is a folder, activating it descends into that folder&rsquo;s level: the tree is traversed by focusing, never by opening a dialog.</p>
+      <p>Third, tree editing. An edit mode overlays both the file page and Focus Mode and provides complete create, read, update and delete over the tree &mdash; renaming, editing card bodies and answers, creating folders and cards, deleting a subtree behind a confirmation that states how many items will be removed, moving a card between folders, and reordering siblings by drag. Scope is deliberately narrow: no accounts, no AI generation, no spaced-repetition scheduling, so recall is carried by the interaction rather than by a scoring system.</p>
+    </div>
+  </section>
+
+  <section id="sec-implementation">
+    <div class="sec-head">
+      <span class="sec-mark"></span>
+      <span class="sec-num">04</span>
+      <h2>Implementation</h2>
+    </div>
+    <p class="impl-line">
+      <span class="k">Front end</span> Vanilla HTML, CSS and ES modules &mdash; no build step, no framework
+      <span class="sep">&middot;</span>
+      <span class="k">Back end</span> Node.js and Express, REST over JSON
+      <span class="sep">&middot;</span>
+      <span class="k">Data</span> PostgreSQL via the <span class="mono">pg</span> driver, one adjacency-list table
+      <span class="sep">&middot;</span>
+      <span class="k">Deployment</span> Vercel serverless function with Supabase Postgres, HTTPS
+    </p>
+  </section>
+
+  <footer class="foot">
+    <span class="mono">Huang_Haoran_24101322D_outline.pdf</span>
+    <span>Every member submits a copy of this outline individually</span>
+  </footer>
+
+</section>
+</body>
+</html>
