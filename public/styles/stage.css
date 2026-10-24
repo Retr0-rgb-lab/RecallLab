@@ -1,0 +1,455 @@
+/* =============================================================================
+   RecallLab — Focus stage (visual-system §4.6, §4.7, §4.8, §5, §6)
+   Owner: agent-focus.  Consumes tokens only — tokens.css owns every variable.
+   ============================================================================= */
+
+.stage,
+.stage *,
+.stage *::before,
+.stage *::after {
+  box-sizing: border-box;
+}
+
+/* -----------------------------------------------------------------------------
+   The stage
+   -------------------------------------------------------------------------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  /* The focused card sits a little below the middle so that a floating
+     window has room to dock above it with its 16px gap. */
+  padding-top: 20dvh;
+  padding-bottom: 4dvh;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-ui, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  /* The page body never scrolls; the stage does not scroll at all. */
+  min-height: 100dvh;
+}
+
+/* The focus register swaps the surfaces. Tokens are switched on the root
+   element by focus.js; this rule keeps the stage on the stage canvas even
+   when the attribute is placed on an ancestor instead. */
+[data-register="stage"] .stage {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.stage:focus {
+  outline: none;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* -----------------------------------------------------------------------------
+   The stack — focused card plus up to three siblings behind it
+   -------------------------------------------------------------------------- */
+
+.stage-stack {
+  position: relative;
+  width: min(720px, 100vw - 96px);
+  min-height: 320px;
+}
+
+.stage-card {
+  --stack-y: 0px;
+  --stack-scale: 1;
+  --flip-x: 0px;
+  --flip-y: 0px;
+  --flip-scale: 1;
+  --flip-rotate: 0deg;
+
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(720px, 100vw - 96px);
+  min-height: 320px;
+  margin: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--e3);
+  contain: layout paint;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* The stack offset and the centring live in `translate`, the gesture delta
+     lives in `transform`. Keeping them apart makes the FLIP inverse exact:
+     the delta is never polluted by the layer offset. */
+  translate: -50% var(--stack-y);
+  transform:
+    translate3d(var(--flip-x), var(--flip-y), 0)
+    scale(calc(var(--stack-scale) * var(--flip-scale)))
+    rotate(var(--flip-rotate));
+}
+
+.stage-card.is-animating {
+  will-change: transform;
+}
+
+/* Layer ladder — offsets 0 / 12 / 24 / 36px, scales 1.000 / .975 / .950 / .925,
+   shadows e3 / e2 / e1 / e0. Layer 4 and deeper are hidden. */
+.stage-card[data-depth="0"] {
+  --stack-y: 0px;
+  --stack-scale: 1;
+  box-shadow: var(--e3);
+  z-index: 4;
+}
+
+.stage-card[data-depth="1"] {
+  --stack-y: 12px;
+  --stack-scale: 0.975;
+  box-shadow: var(--e2);
+  z-index: 3;
+}
+
+.stage-card[data-depth="2"] {
+  --stack-y: 24px;
+  --stack-scale: 0.95;
+  box-shadow: var(--e1);
+  z-index: 2;
+}
+
+.stage-card[data-depth="3"] {
+  --stack-y: 36px;
+  --stack-scale: 0.925;
+  box-shadow: var(--e0);
+  z-index: 1;
+}
+
+/* A card that is being lifted out keeps its element (the pointer capture
+   lives on it) but is invisible. */
+.stage-card.is-floating-source {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A card on its way off the stage flies above the stack. */
+.stage-card.is-thrown {
+  z-index: 30;
+}
+
+/* The leading-edge marker: the only place the accent appears in focus mode. */
+.stage-card[data-depth="0"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 6px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   The card faces — the flip
+   -------------------------------------------------------------------------- */
+
+.stage-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  transform-style: preserve-3d;
+  transition: transform var(--t-flip) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stage-card.is-flipped .stage-card-inner {
+  transform: rotateY(180deg);
+}
+
+.stage-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 32px;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.stage-card-front {
+  transform: rotateY(0deg);
+}
+
+/* The back face is pre-rotated so the flip reads as one continuous object. */
+.stage-card-back {
+  transform: rotateY(180deg);
+  gap: 0;
+}
+
+.stage-card-title {
+  margin: 0;
+  font-family: var(--font-ui, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: var(--t-stage-title, 26px);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.stage-card-body {
+  margin: 0;
+  font-size: var(--t-body, 16px);
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--ink-2);
+  max-width: 62ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.stage-card-answer {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  font-size: var(--t-body, 16px);
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--ink-3);
+  max-width: 62ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  transition: color var(--t-flip) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Revealed answers carry primary ink. */
+.stage-card.is-flipped .stage-card-answer {
+  color: var(--ink);
+}
+
+/* A card with no answer says so, muted, on the front face. */
+.stage-card-no-answer {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* -----------------------------------------------------------------------------
+   Per-node controls (edit hooks live inside the card)
+   -------------------------------------------------------------------------- */
+
+.stage-card-delete {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    background-color var(--t-hover) ease-out,
+    color var(--t-hover) ease-out;
+}
+
+.stage-card-delete:hover {
+  background: var(--surface-hover);
+  color: var(--ink-2);
+}
+
+/* The dismiss control is the coarse-pointer replacement for the drag gesture. */
+.stage-card-dismiss {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-hover);
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .stage-card-dismiss {
+    display: inline-flex;
+  }
+
+  .stage-card-delete {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Floating window (PiP)
+   -------------------------------------------------------------------------- */
+
+.stage-pips {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.pip {
+  --pip-width: min(440px, max(320px, 100vw * 0.34));
+  --pip-height: min(
+    300px,
+    max(220px, min(440px, max(320px, 100vw * 0.34)) * 0.68)
+  );
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--pip-width);
+  height: var(--pip-height);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--e3);
+  pointer-events: auto;
+  contain: layout paint;
+  transition: opacity var(--t-move) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pip-header:hover {
+  background: var(--surface-hover);
+}
+
+.pip-header:active {
+  cursor: grabbing;
+}
+
+.pip-title {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pip-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 16px;
+}
+
+.pip-text {
+  margin: 0;
+  font-size: var(--t-body-sm, 14px);
+  line-height: 1.55;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pip-answer {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+  font-size: var(--t-body-sm, 14px);
+  line-height: 1.55;
+  color: var(--ink-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pip-answer.is-revealed {
+  color: var(--ink);
+}
+
+/* -----------------------------------------------------------------------------
+   Dragging — no transition may be active (contracts §4.6 rule 1)
+   -------------------------------------------------------------------------- */
+
+.stage-card.dragging,
+.stage-card.dragging *,
+.pip.dragging,
+.pip.dragging * {
+  transition: none !important;
+}
+
+.stage-card.dragging {
+  cursor: grabbing;
+}
+
+/* -----------------------------------------------------------------------------
+   Reduced motion — 120ms opacity cross-fade instead of every spring and flip
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-card-inner {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .stage-card-face {
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transition: opacity 120ms ease-out;
+  }
+
+  .stage-card-back {
+    transform: none;
+    opacity: 0;
+  }
+
+  .stage-card.is-flipped .stage-card-front {
+    opacity: 0;
+  }
+
+  .stage-card.is-flipped .stage-card-back {
+    opacity: 1;
+  }
+
+  .stage-card-answer {
+    transition: none;
+  }
+
+  .pip {
+    transition: opacity 120ms ease-out;
+  }
+}
