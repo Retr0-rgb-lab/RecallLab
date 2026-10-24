@@ -64,6 +64,7 @@ warm.
 | `--surface` | `#17171A` | Focused card fill, floating window fill |
 | `--surface-hover` | `#1F1F23` | Floating window header hover |
 | `--hairline` | `#27272A` | Card border, floating window border |
+| `--hairline-strong` | `#3F3F46` | Focused input border, active divider, current-path bar |
 | `--ink` | `#FAFAFA` | Focused card title, revealed answer |
 | `--ink-2` | `#D4D4D8` | Card body on stage |
 | `--ink-3` | `#A1A1AA` | Unrevealed answer, secondary stage metadata |
@@ -428,6 +429,7 @@ software, so:
   --surface: #17171A;
   --surface-hover: #1F1F23;
   --hairline: #27272A;
+  --hairline-strong: #3F3F46;
   --ink: #FAFAFA;
   --ink-2: #D4D4D8;
   --ink-3: #A1A1AA;

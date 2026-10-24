@@ -1,0 +1,639 @@
+/* =============================================================================
+   RecallLab — file page layout
+   -----------------------------------------------------------------------------
+   Owner: agent-design. The browse register: spine, toolbar, breadcrumb, tile
+   grid, loading skeleton, empty state, inline error banner.
+
+   DOM contract (contracts §5):
+     #app
+       #spine > #spine-tree
+       #main
+         #toolbar > #breadcrumb, #toolbar-actions
+         #content > #grid > .tile, #stage-root
+
+   Source of truth:
+     docs/specs/2026-10-24-recalllab-visual-system.md  §4.1 tiles, §4.2 buttons,
+                                                         §4.4 spine, §4.5 breadcrumb,
+                                                         §4.10 loading/empty/error,
+                                                         §5 layout, §6.3 performance
+     docs/specs/2026-10-24-recalllab-contracts.md     §5 DOM registry, §8 constants
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   1. The shell
+   The page body never scrolls: the shell is exactly one viewport tall and the
+   file page scrolls its own grid region. `100dvh`, never `100vh`.
+   -------------------------------------------------------------------------- */
+
+#app {
+  min-height: 100dvh;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: var(--spine-w) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+/* The spine collapses to 0 by collapsing its grid track, not by hiding it. */
+#app[data-spine="collapsed"] {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+#app[data-spine="collapsed"] #spine {
+  border-right-color: transparent;
+}
+
+#main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* The stage mounts here in focus mode; in browse mode the placeholder is empty
+   and must not occupy a row of the scroll area. */
+#stage-root:empty {
+  display: none;
+}
+
+/* -----------------------------------------------------------------------------
+   2. The spine (visual system §4.4)
+   240px, collapsible to 0, sunken surface, hairline right border, 14px
+   indentation per level, 16px kind icon, title at --t-title, chevron for
+   folders with children. The current path is --ink with a 2px --accent bar.
+   -------------------------------------------------------------------------- */
+
+#spine {
+  min-width: 0;
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--hairline);
+  overflow: hidden auto;
+}
+
+#spine-tree {
+  padding: var(--space-2) 0;
+}
+
+.spine-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--spine-row-h);
+  padding-right: var(--spine-pad-x);
+  /* Indentation is clipped at four levels; deeper rows carry .is-clipped and
+     show the "…" affordance instead of an unbounded indent. */
+  padding-left: calc(var(--spine-pad-x) + min(var(--depth, 0), 4) * var(--spine-indent));
+  color: var(--ink-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-title);
+  letter-spacing: var(--track-title);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--t-hover) var(--ease-out),
+    color var(--t-hover) var(--ease-out);
+}
+
+.spine-row:hover {
+  background: var(--surface-hover);
+}
+
+.spine-row.is-current,
+.spine-row[aria-current="true"] {
+  color: var(--ink);
+}
+
+.spine-row.is-current::before,
+.spine-row[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--focus-ring-w);
+  background: var(--accent);
+}
+
+.spine-icon {
+  flex: none;
+  width: var(--spine-icon);
+  height: var(--spine-icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.spine-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.spine-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Depth past four levels is elided, not indented. */
+.spine-row.is-clipped .spine-label::before {
+  content: "…";
+  margin-right: var(--space-1);
+  color: var(--ink-3);
+}
+
+.spine-chevron {
+  flex: none;
+  margin-left: auto;
+  width: var(--space-4);
+  height: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.spine-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* -----------------------------------------------------------------------------
+   3. The toolbar (visual system §4.5)
+   48px tall, --canvas background, --hairline bottom border.
+   -------------------------------------------------------------------------- */
+
+#toolbar {
+  flex: none;
+  height: var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0 var(--grid-pad);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+}
+
+#toolbar-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* -----------------------------------------------------------------------------
+   4. The breadcrumb (visual system §4.5)
+   Segments separated by "›" in --ink-3. Non-final segments are --ink-2 and
+   clickable; the final segment is --ink and is not a link. Long paths truncate
+   from the left: the oldest segments lose their text first (weighted
+   flex-shrink) and the current segment is never truncated.
+   -------------------------------------------------------------------------- */
+
+#breadcrumb {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.crumb {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-2);
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--fw-body-sm);
+  letter-spacing: var(--track-body-sm);
+  cursor: pointer;
+  transition: color var(--t-hover) var(--ease-out);
+}
+
+.crumb:hover {
+  color: var(--ink);
+}
+
+.crumb + .crumb::before {
+  content: "›";
+  margin: 0 var(--crumb-gap);
+  color: var(--ink-3);
+}
+
+/* The current segment is not a link. */
+.crumb-current,
+.crumb[aria-current="page"] {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-title);
+  letter-spacing: var(--track-title);
+  cursor: default;
+}
+
+/* Left-weighted shrinkage: the root end of the path is truncated first. */
+.crumb:nth-child(1) {
+  flex-shrink: 12;
+}
+
+.crumb:nth-child(2) {
+  flex-shrink: 8;
+}
+
+.crumb:nth-child(3) {
+  flex-shrink: 6;
+}
+
+.crumb:nth-child(4) {
+  flex-shrink: 4;
+}
+
+.crumb:nth-child(n + 5) {
+  flex-shrink: 2;
+}
+
+/* Optional left-truncation marker, rendered by the view when the path is long. */
+.crumb-more {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Buttons (visual system §4.2)
+   Primary is --ink fill with --ink-inverse text — never the accent. Press
+   feedback is a 1px press-down. No glow, no gradient, no pill, no scale bounce.
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--fw-body-sm);
+  letter-spacing: var(--track-body-sm);
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color var(--t-hover) var(--ease-out),
+    border-color var(--t-hover) var(--ease-out),
+    color var(--t-hover) var(--ease-out),
+    opacity var(--t-hover) var(--ease-out),
+    transform var(--t-hover) var(--ease-out);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ink-inverse);
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-secondary,
+.btn-ghost {
+  background: transparent;
+  border-color: var(--hairline-strong);
+  color: var(--ink);
+}
+
+.btn-secondary:hover,
+.btn-ghost:hover {
+  background: var(--surface-hover);
+}
+
+.btn-icon {
+  width: var(--btn-icon);
+  height: var(--btn-icon);
+  padding: 0;
+  color: var(--ink-2);
+}
+
+.btn-icon:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* -----------------------------------------------------------------------------
+   6. The tile grid (visual system §4.1)
+   repeat(auto-fill, minmax(220px, 1fr)), 16px gap, 24px padding, 1400px cap.
+   -------------------------------------------------------------------------- */
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile-min), 1fr));
+  gap: var(--grid-gap);
+  padding: var(--grid-pad);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tile-gap);
+  min-height: var(--tile-h);
+  padding: var(--tile-pad);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--tile-radius);
+  box-shadow: var(--e0);
+  cursor: pointer;
+  user-select: none;
+  /* Tiles never repaint the page while they move (visual system §6.3). */
+  contain: layout paint;
+  transition: transform var(--t-hover) var(--ease-out);
+}
+
+/* A 1px lift plus the shadow step. The shadow snaps rather than animating:
+   box-shadow is never animated (visual system §6.3). */
+.tile:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--e1);
+}
+
+.tile-icon {
+  flex: none;
+  width: var(--tile-icon);
+  height: var(--tile-icon);
+  color: var(--ink-3);
+  transition: color var(--t-hover) var(--ease-out);
+}
+
+.tile-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tile:hover .tile-icon {
+  color: var(--ink-2);
+}
+
+.tile-title {
+  width: 100%;
+  font-size: var(--t-tile);
+  line-height: var(--lh-tile);
+  font-weight: var(--fw-tile);
+  letter-spacing: var(--track-tile);
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.tile-preview {
+  width: 100%;
+  font-size: var(--t-preview);
+  line-height: var(--lh-preview);
+  font-weight: var(--fw-preview);
+  letter-spacing: var(--track-preview);
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Folders carry no body preview. */
+.tile[data-kind="folder"] .tile-preview {
+  display: none;
+}
+
+/* -----------------------------------------------------------------------------
+   7. Loading skeleton (visual system §4.10)
+   Blocks matching the exact dimensions of the tiles they replace, with a 1.4s
+   shimmer sweep. Never a circular spinner. The sweep is a solid band, not a
+   gradient fill.
+   -------------------------------------------------------------------------- */
+
+.tile--skeleton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.tile--skeleton:hover {
+  transform: none;
+  box-shadow: var(--e0);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-hover);
+  border-radius: var(--skeleton-radius);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--skeleton-band);
+  background: var(--surface);
+  opacity: 0.65;
+  transform: translateX(-100%);
+  animation: skeleton-sweep var(--skeleton-sweep) var(--ease-out) infinite;
+}
+
+.skeleton--icon {
+  width: var(--tile-icon);
+  height: var(--tile-icon);
+}
+
+.skeleton--line {
+  width: 100%;
+  height: var(--skeleton-title-h);
+}
+
+.skeleton--line-short {
+  width: 60%;
+  height: var(--skeleton-preview-h);
+}
+
+@keyframes skeleton-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   8. Empty state (visual system §4.10)
+   The tile grid's own footprint drawn as faint outlines, one line of copy, and
+   a single primary action. Never the words "No data".
+   -------------------------------------------------------------------------- */
+
+.empty-state {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--grid-pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  text-align: center;
+}
+
+.empty-footprint {
+  display: flex;
+  gap: var(--grid-gap);
+  max-width: 100%;
+}
+
+.empty-tile {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: var(--empty-tile-w);
+  height: var(--empty-tile-h);
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--tile-radius);
+}
+
+.empty-message {
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--fw-body-sm);
+  letter-spacing: var(--track-body-sm);
+  color: var(--ink-2);
+}
+
+/* -----------------------------------------------------------------------------
+   9. Inline error banner (visual system §4.10)
+   A failed fetch surfaces as a banner that names the operation and offers a
+   retry. The database-paused case is a full-width banner with the same
+   construction — a real, expected state of the deployment, not an edge case.
+   -------------------------------------------------------------------------- */
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: var(--content-max);
+  margin: 0 auto var(--grid-gap);
+  padding: var(--space-3) var(--grid-pad);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--btn-radius);
+  color: var(--ink);
+}
+
+.banner--error {
+  border-left: var(--focus-ring-w) solid var(--error);
+}
+
+.banner--notice {
+  border-left: var(--focus-ring-w) solid var(--hairline-strong);
+}
+
+.banner-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--fw-body-sm);
+  letter-spacing: var(--track-body-sm);
+}
+
+.banner-action {
+  flex: none;
+}
+
+/* -----------------------------------------------------------------------------
+   10. Responsive (visual system §5)
+   Below 768px the spine becomes a drawer and the grid drops to a single
+   column. Nothing scrolls horizontally at any viewport width.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  #app,
+  #app[data-spine="collapsed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The spine becomes an overlay drawer. The transform is the only thing that
+     animates; the drawer runs no transition while it is being dragged.
+     visibility keeps the closed drawer out of the tab order while still
+     letting it slide in. */
+  #spine {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: min(var(--spine-w), 82vw);
+    border-right: 1px solid var(--hairline);
+    box-shadow: var(--e2);
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform var(--t-move) var(--ease-move),
+      visibility 0s linear var(--t-move);
+  }
+
+  #app[data-spine="expanded"] #spine {
+    visibility: visible;
+    transform: translateX(0);
+    transition: transform var(--t-move) var(--ease-move), visibility 0s;
+  }
+
+  #grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #toolbar {
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
+  }
+}
+
+/* Coarse pointers: every interactive target is at least 44x44 (contracts §9). */
+@media (pointer: coarse) {
+  .btn {
+    min-height: var(--btn-icon-touch);
+  }
+
+  .btn-icon {
+    width: var(--btn-icon-touch);
+    height: var(--btn-icon-touch);
+  }
+
+  .spine-row {
+    min-height: var(--btn-icon-touch);
+  }
+}

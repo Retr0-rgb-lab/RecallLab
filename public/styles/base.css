@@ -1,0 +1,226 @@
+/* =============================================================================
+   RecallLab — base stylesheet
+   -----------------------------------------------------------------------------
+   Owner: agent-design. Page-level scaffolding only: reset, typography, focus
+   ring, motion policy, selection and scrollbars. No component layout here —
+   the file page lives in layout.css, the stage in stage.css, the editor in
+   edit.css.
+
+   Source of truth:
+     docs/specs/2026-10-24-recalllab-visual-system.md  §3 typography, §6.6 reduced
+                                                         motion, §7 anti-patterns
+     docs/specs/2026-10-24-recalllab-contracts.md     §9 accessibility
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   1. Reset
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Safety net only: the layout is built so nothing overflows horizontally.
+     `clip` (not `hidden`) so the document is not turned into a scroll
+     container, which would break the "the page body never scrolls" rule. */
+  overflow-x: clip;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd,
+ul,
+ol,
+fieldset,
+legend {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+button {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* Inline SVG icons keep whatever paint they are authored with (fill/stroke
+   attributes, usually currentColor). Nothing here overrides it. */
+
+/* Numerals never jitter (visual system §3.3). */
+table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono);
+  line-height: var(--lh-mono);
+  font-weight: var(--fw-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Page scaffolding
+   The page body never scrolls: the shell is exactly one viewport tall and the
+   file page scrolls its own grid region (visual system §5). `100dvh`, never
+   `100vh` — the dynamic viewport height is what a mobile browser reports when
+   its chrome collapses.
+   -------------------------------------------------------------------------- */
+
+body {
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* -----------------------------------------------------------------------------
+   3. Type scale utilities (visual system §3.2)
+   Hierarchy comes from weight, size and colour — never from size alone.
+   -------------------------------------------------------------------------- */
+
+.title {
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-title);
+  letter-spacing: var(--track-title);
+}
+
+.label {
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--fw-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono);
+  line-height: var(--lh-mono);
+  font-weight: var(--fw-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -----------------------------------------------------------------------------
+   4. Focus ring (contracts §9)
+   2px var(--accent) at 2px offset, on :focus-visible only. The accent is used
+   here because it is a ring — never as a filled area or as body text.
+   -------------------------------------------------------------------------- */
+
+:focus-visible {
+  outline: var(--focus-ring-w) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Selection and scrollbars
+   The selection inverts the ink pair, which is register-swapped, so it stays
+   legible in both registers without introducing a second colour.
+   -------------------------------------------------------------------------- */
+
+::selection {
+  background: var(--ink);
+  color: var(--ink-inverse);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* -----------------------------------------------------------------------------
+   6. Reduced motion (visual system §6.6)
+   Every spring, flip and mode transition collapses to a 120ms opacity
+   cross-fade. The gestures keep working — nothing travels, bounces or
+   inherits velocity. tokens.css has already shortened the timing tokens; this
+   block makes sure no element animates anything but opacity and colour.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 120ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    transition-property: opacity, background-color, border-color, color, fill,
+      stroke !important;
+    scroll-behavior: auto !important;
+  }
+}

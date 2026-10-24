@@ -743,9 +743,10 @@ values, repeated here because the interaction spec depends on them:
 | Surface | `--surface` | `#FFFFFF` | `#17171A` |
 | Surface hover | `--surface-hover` | `#F4F4F5` | `#1F1F23` |
 | Hairline | `--hairline` | `#E4E4E7` | `#27272A` |
+| Hairline strong | `--hairline-strong` | `#D4D4D8` | `#3F3F46` |
 | Ink primary | `--ink` | `#18181B` | `#FAFAFA` |
-| Ink secondary | `--ink-2` | `#52525B` | `#A1A1AA` |
-| Ink muted | `--ink-3` | `#A1A1AA` | `#71717A` |
+| Ink secondary | `--ink-2` | `#52525B` | `#D4D4D8` |
+| Ink muted | `--ink-3` | `#A1A1AA` | `#A1A1AA` |
 | Accent | `--accent` | `#E8A33D` | `#E8A33D` |
 
 One accent, used **only** for focus rings, active indicators, and the focused card's marker.

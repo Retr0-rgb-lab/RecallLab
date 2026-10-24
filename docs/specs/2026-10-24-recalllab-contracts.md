@@ -480,6 +480,13 @@ reference" — both registers (`:root` for browse, `[data-register="stage"]` for
 - `--hold-ms: 450`, `--drag-threshold-px: 56`, `--flick-velocity: .35`
 - `--e0`…`--e3` shadow ladder, both registers
 
+**Type tokens are SIZES, not `font` shorthands.** A `--t-*` token must resolve to something
+substitutable into `font-size`. The type scale therefore ships each step as a size plus
+companions: `--t-<step>` (size), `--lh-<step>` (line-height), `--fw-<step>` (font-weight),
+`--track-<step>` (letter-spacing). A `--t-*` declared as a `font` shorthand is **invalid** in
+`font-size: var(--t-*)` and silently falls back — this exact collision occurred during the first
+build wave and was caught by cross-file inspection. Never declare a type token as a shorthand.
+
 `stage.css` and `edit.css` **must not redefine** these variables. They may only consume them.
 
 Additional register switch: the root element carries `data-register="stage"` while Focus Mode is

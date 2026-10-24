@@ -1,0 +1,270 @@
+/* =============================================================================
+   RecallLab — design tokens
+   -----------------------------------------------------------------------------
+   Owner: agent-design. This file is the SINGLE SOURCE of every custom property
+   in the product. stage.css and edit.css MUST consume these; they must never
+   redefine them.
+
+   Source of truth:
+     docs/specs/2026-10-24-recalllab-visual-system.md  §2 colour, §3.2 type
+                                                         scale, §4.9 shadow ladder,
+                                                         §6.1 timing, §8 quick reference
+     docs/specs/2026-10-24-recalllab-contracts.md     §6 tokens, §7 fonts, §8 constants
+
+   Two registers, one system:
+     :root                    browse  (pale, flat, dense)
+     [data-register="stage"]  focus   (near-black, empty, one object lit)
+
+   The register switch is a single attribute on the root element, so the swap is
+   one line of markup — never a re-theme of individual components.
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   1. Fonts
+   Self-hosted, latin subset, woff2, font-display: swap. No CJK webfont — the CJK
+   stack is the operating system's (§3.1). No CDN hotlink at runtime.
+
+   Fallback stacks (contracts §7):
+     "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+     Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+     sans-serif
+     "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist-latin-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist-latin-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* -----------------------------------------------------------------------------
+   2. The browse register — :root
+   Visual system §8 "Quick reference" (light column of §2.1 / §4.9 / §6.1).
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* --- Surfaces & ink (visual system §2.1) --- */
+  --canvas: #FAFAFA;
+  --surface: #FFFFFF;
+  --surface-hover: #F4F4F5;
+  --surface-sunken: #F4F4F5;
+  --hairline: #E4E4E7;
+  --hairline-strong: #D4D4D8;
+  --ink: #18181B;
+  --ink-2: #52525B;
+  --ink-3: #A1A1AA;
+  --ink-inverse: #FAFAFA;
+
+  /* --- The single accent (visual system §2.3) --- */
+  /* Rings, edges, dots, indicators. Never body text on a light surface. */
+  --accent: #E8A33D;
+  --accent-dim: #B87C2A;
+
+  /* --- The only second colour in the system: a functional error signal (visual system §4.3) --- */
+  --error: #B42318;
+
+  /* --- Shadow ladder (visual system §4.9, light column) --- */
+  --e0: none;
+  --e1: 0 1px 2px rgba(24,24,27,.06), 0 1px 1px rgba(24,24,27,.04);
+  --e2: 0 4px 12px rgba(24,24,27,.08), 0 1px 3px rgba(24,24,27,.05);
+  --e3: 0 12px 32px rgba(24,24,27,.12), 0 2px 8px rgba(24,24,27,.06);
+
+  /* --- Timing constants (visual system §6.1) --- */
+  --t-hover: 120ms;
+  --t-focus-ring: 160ms;
+  --t-flip: 320ms;
+  --t-move: 320ms;
+  --t-mode: 420ms;
+  --hold-ms: 450;
+  --drag-threshold-px: 56;
+  --flick-velocity: .35;
+
+  /* --- Easing (visual system §6.1) --- */
+  --ease-out: ease-out;
+  --ease-move: cubic-bezier(.22,1,.36,1);
+
+  /* --- Type families (visual system §3.1) --- */
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* Alias for stage.css, which reads var(--font-ui, …). This hands it the
+     documented stack, including the CJK system fallback. */
+  --font-ui: var(--font-sans);
+
+  /* --- Type scale (visual system §3.2) ---
+     --t-* is the SIZE, so it composes with font-size. The companions carry
+     line-height, weight and tracking, which font-size cannot express. */
+  --t-stage-title: 26px;
+  --lh-stage-title: 1.3;
+  --fw-stage-title: 600;
+  --track-stage-title: -0.02em;
+
+  --t-title: 17px;
+  --lh-title: 1.35;
+  --fw-title: 600;
+  --track-title: -0.01em;
+
+  --t-tile: 15px;
+  --lh-tile: 1.4;
+  --fw-tile: 500;
+  --track-tile: 0;
+
+  --t-body: 16px;
+  --lh-body: 1.6;
+  --fw-body: 400;
+  --track-body: 0;
+
+  --t-body-sm: 14px;
+  --lh-body-sm: 1.55;
+  --fw-body-sm: 400;
+  --track-body-sm: 0;
+
+  --t-preview: 13px;
+  --lh-preview: 1.45;
+  --fw-preview: 400;
+  --track-preview: 0;
+
+  --t-label: 12px;
+  --lh-label: 1.3;
+  --fw-label: 500;
+  --track-label: 0.04em;
+
+  --t-mono: 13px;
+  --lh-mono: 1.4;
+  --fw-mono: 400;
+  --track-mono: 0;
+
+  /* --- Layout constants (contracts §8, visual system §4) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --spine-w: 240px;
+  --spine-indent: 14px;
+  --spine-pad-x: 12px;
+  --spine-row-h: 28px;
+  --spine-icon: 16px;
+  /* Depth of a spine row. The tree renderer overrides it inline
+     (style="--depth: N"); indentation is clipped at 4 by layout.css. */
+  --depth: 0;
+  --toolbar-h: 48px;
+  --content-max: 1400px;
+  --grid-gap: 16px;
+  --grid-pad: 24px;
+  --tile-min: 220px;
+  --tile-pad: 16px;
+  --tile-radius: 14px;
+  --tile-icon: 20px;
+  --tile-gap: 8px;
+  /* Icon + gap + two title lines + gap + one preview line + padding. */
+  --tile-h: 130px;
+  --btn-radius: 10px;
+  --btn-pad-y: 8px;
+  --btn-pad-x: 14px;
+  --btn-icon: 32px;
+  --btn-icon-touch: 44px;
+  --focus-ring-w: 2px;
+  --focus-ring-offset: 2px;
+  --crumb-gap: 8px;
+  --skeleton-sweep: 1.4s;
+  --skeleton-band: 40%;
+  --skeleton-radius: 6px;
+  --skeleton-title-h: 15px;
+  --skeleton-preview-h: 13px;
+  --empty-tile-w: 220px;
+  --empty-tile-h: 96px;
+
+  /* --- Native form controls follow the browse register --- */
+  color-scheme: light;
+}
+
+/* -----------------------------------------------------------------------------
+   3. The focus register — [data-register="stage"]
+   Visual system §8 "Quick reference" (dark column of §2.2 / §4.9).
+
+   The attribute sits on the root element, so this block is the later,
+   equal-specificity sibling of :root and therefore wins.
+   -------------------------------------------------------------------------- */
+
+[data-register="stage"] {
+  /* --- Surfaces & ink (visual system §2.2) --- */
+  --canvas: #0B0B0C;
+  --surface: #17171A;
+  --surface-hover: #1F1F23;
+  --hairline: #27272A;
+  --ink: #FAFAFA;
+  --ink-2: #D4D4D8;
+  --ink-3: #A1A1AA;
+  --ink-inverse: #0B0B0C;
+
+  /* --- The accent is register-invariant (§2.3): one warm hue, one meaning --- */
+  --accent: #E8A33D;
+
+  /* --- Shadow ladder (visual system §4.9, dark column) --- */
+  --e0: none;
+  --e1: 0 1px 2px rgba(0,0,0,.35);
+  --e2: 0 4px 14px rgba(0,0,0,.45);
+  --e3: 0 16px 40px rgba(0,0,0,.55);
+
+  /* --- Timing constants: identical in both registers (visual system §6.1) --- */
+  --t-hover: 120ms;
+  --t-focus-ring: 160ms;
+  --t-flip: 320ms;
+  --t-move: 320ms;
+  --t-mode: 420ms;
+  --hold-ms: 450;
+  --drag-threshold-px: 56;
+  --flick-velocity: .35;
+
+  /* --- Spec gap, resolved from declared tokens only (§2.2 gives no dark value
+         for these two, and a light value must never reach the stage):
+         sunken is darker than surface, a strong hairline is the mid grey. --- */
+  --surface-sunken: var(--canvas);
+  --hairline-strong: #3F3F46;
+
+  /* --- Native form controls follow the focus register --- */
+  color-scheme: dark;
+}
+
+/* -----------------------------------------------------------------------------
+   4. Reduced motion (visual system §6.6)
+   Every spring, flip and mode transition becomes a 120ms opacity cross-fade.
+   The token values change here; base.css enforces the cross-fade behaviour.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-hover: 120ms;
+    --t-focus-ring: 120ms;
+    --t-flip: 120ms;
+    --t-move: 120ms;
+    --t-mode: 120ms;
+  }
+}
