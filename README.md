@@ -20,6 +20,8 @@ Three functions make up the product:
 
 ### File page (browse)
 
+![The file page at the root level](docs/screenshots/01-file-page-root.png)
+
 - **Spine** — the whole tree, indented, with the current path highlighted.
 - **Breadcrumb** — the path to the current level; every ancestor segment is clickable.
 - **Tiled grid** — the children of the current level. Folders sort before cards, then by position.
@@ -28,6 +30,8 @@ Three functions make up the product:
   Mode; browser back and forward restore the previous level.
 
 ### Focus Mode
+
+![Focus Mode: one card on a dark stage, the path of the level on top](docs/screenshots/03-focus-mode.png)
 
 - **Reveal** — click the focused card and it flips to show the answer. Click again to flip back.
 - **Drag to advance** — drag the card more than 56px and it leaves with the velocity of the
@@ -46,8 +50,10 @@ Focus Mode records nothing. There is no score, no review history, and no schedul
 
 ### Edit Mode
 
+![Edit Mode over the file page](docs/screenshots/05-edit-mode.png)
+
 An overlay over the file page or over Focus Mode, toggled with the **Edit** button in the toolbar
-next to the breadcrumb.
+next to the breadcrumb, or with the `E` key.
 
 - Create a folder or a card in the level on screen.
 - Rename any node; edit a card's body and answer inline.
