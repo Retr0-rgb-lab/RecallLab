@@ -293,7 +293,12 @@ function createCardElement(node) {
 
   const title = document.createElement('h2');
   title.className = 'stage-card-title';
-  title.dataset.edit = 'title';
+  // The hook lives INSIDE the styled element, exactly as the file page does it
+  // (contracts §5.3): the container keeps the card's typography, the hook is
+  // the text `edit.js` turns into an input.
+  const titleHook = document.createElement('span');
+  titleHook.dataset.edit = 'title';
+  title.appendChild(titleHook);
 
   const body = document.createElement('div');
   body.className = 'stage-card-body';
@@ -338,9 +343,14 @@ function createCardElement(node) {
   const back = document.createElement('div');
   back.className = 'stage-card-face stage-card-back';
 
+  // The answer has a surface of its own — the back of the card — so it needs
+  // no hidden container here: the file page hides its answer because the file
+  // page has nowhere to show it.
   const answer = document.createElement('div');
   answer.className = 'stage-card-answer';
-  answer.dataset.edit = 'answer';
+  const answerHook = document.createElement('span');
+  answerHook.dataset.edit = 'answer';
+  answer.appendChild(answerHook);
 
   back.appendChild(answer);
 
@@ -351,20 +361,38 @@ function createCardElement(node) {
   return article;
 }
 
+/**
+ * A hook that `edit.js` has turned into a real editor must not be
+ * overwritten: `edit.js` keeps the hook element and mounts the input inside
+ * it (marking it `is-editing-field`), so writing to it would throw the
+ * editor away mid-edit.
+ *
+ * This is the same convention the file page uses (`filepage.js`).
+ */
+function isEditingHook(el) {
+  return (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement ||
+    el.isContentEditable === true ||
+    el.classList.contains('is-editing-field')
+  );
+}
+
 function updateCardContent(el, node) {
-  const title = el.querySelector('.stage-card-title');
-  const text = el.querySelector('.stage-card-text');
+  const titleHook = el.querySelector('[data-edit="title"]');
+  const bodyHook = el.querySelector('[data-edit="body"]');
+  const answerHook = el.querySelector('[data-edit="answer"]');
   const emptyAnswer = el.querySelector('.stage-card-no-answer');
-  const answer = el.querySelector('.stage-card-answer');
   const remove = el.querySelector('.stage-card-delete');
 
   const answerText = (node.answer || '').trim();
   const hasAnswer = answerText.length > 0;
 
-  if (title.textContent !== (node.title || '')) title.textContent = node.title || '';
-  if (text.textContent !== (node.body || '')) text.textContent = node.body || '';
+  if (titleHook && !isEditingHook(titleHook)) titleHook.textContent = node.title || '';
+  if (bodyHook && !isEditingHook(bodyHook)) bodyHook.textContent = node.body || '';
+  if (answerHook && !isEditingHook(answerHook)) answerHook.textContent = answerText;
   emptyAnswer.hidden = hasAnswer;
-  if (answer.textContent !== answerText) answer.textContent = answerText;
   if (remove) remove.setAttribute('aria-label', `Delete ${node.title}`);
 }
 

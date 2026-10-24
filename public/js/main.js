@@ -134,12 +134,14 @@ export const router = {
  * ------------------------------------------------------------------------ */
 
 const dom = {
+  app: null,
   grid: null,
   actions: null,
   live: null,
   focusButton: null,
   editButton: null,
   createButton: null,
+  spineButton: null,
 };
 
 /** The node id currently on stage, so `focus.enter()` is not called twice. */
@@ -195,11 +197,110 @@ function buildToolbar() {
   createButton.textContent = 'New';
   createButton.addEventListener('click', onCreateClick);
 
-  actions.replaceChildren(focusButton, editButton, createButton);
+  const spineButton = buildSpineToggle();
+
+  actions.replaceChildren(spineButton, focusButton, editButton, createButton);
 
   dom.focusButton = focusButton;
   dom.editButton = editButton;
   dom.createButton = createButton;
+  dom.spineButton = spineButton;
+}
+
+/* ---------------------------------------------------------------------------
+   The spine — the collapsible outline (contracts §8, visual system §4.4)
+   ------------------------------------------------------------------------ */
+
+/** Below this width the spine is a drawer instead of a column (layout.css §10). */
+const SPINE_DRAWER_QUERY = '(max-width: 767px)';
+
+/**
+ * The spine toggle.
+ *
+ * It lives with the other toolbar actions, on the right of the toolbar: below
+ * 768px the spine is a drawer that covers the left of the screen, and the
+ * toggle has to stay reachable in that register too.
+ *
+ * @returns {HTMLButtonElement}
+ */
+function buildSpineToggle() {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'action-spine';
+  button.className = 'btn btn-icon';
+  button.setAttribute('aria-controls', 'spine');
+  button.addEventListener('click', onSpineClick);
+  button.appendChild(spineIcon());
+  return button;
+}
+
+/**
+ * The "toggle the outline" glyph: a panel with its left column marked.
+ * @returns {SVGSVGElement}
+ */
+function spineIcon() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.6');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+
+  const panel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  panel.setAttribute('x', '3.5');
+  panel.setAttribute('y', '4.5');
+  panel.setAttribute('width', '17');
+  panel.setAttribute('height', '15');
+  panel.setAttribute('rx', '2.5');
+
+  const column = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  column.setAttribute('d', 'M9.5 4.5v15');
+
+  svg.append(panel, column);
+  return svg;
+}
+
+/** @returns {boolean} whether the spine is collapsed right now. */
+function spineIsCollapsed() {
+  return dom.app?.getAttribute('data-spine') === 'collapsed';
+}
+
+/**
+ * Set the spine state on `#app`.
+ *
+ * `layout.css` reads the same attribute in both registers: above 768px
+ * `collapsed` shrinks the column to 0 and `expanded` keeps it; below 768px
+ * `expanded` slides the drawer in and `collapsed` leaves it closed. One
+ * attribute, both registers — the state never fights the responsive rule.
+ *
+ * @param {boolean} collapsed
+ */
+function setSpineCollapsed(collapsed) {
+  if (!dom.app) return;
+
+  dom.app.setAttribute('data-spine', collapsed ? 'collapsed' : 'expanded');
+
+  const spine = document.getElementById('spine');
+  if (spine) {
+    /* A collapsed spine is clipped to nothing, but its rows are still
+       focusable — they must leave the tab order with it. */
+    if (collapsed) spine.setAttribute('inert', '');
+    else spine.removeAttribute('inert');
+  }
+
+  if (dom.spineButton) {
+    const label = collapsed ? 'Show the outline' : 'Hide the outline';
+    dom.spineButton.setAttribute('aria-expanded', String(!collapsed));
+    dom.spineButton.setAttribute('aria-label', label);
+    dom.spineButton.title = label;
+  }
+}
+
+function onSpineClick() {
+  setSpineCollapsed(!spineIsCollapsed());
 }
 
 /** Reflect the current state in the toolbar. */
@@ -387,12 +488,59 @@ function syncFocusWithModule() {
  * Bootstrap
  * ------------------------------------------------------------------------ */
 
+/* ---------------------------------------------------------------------------
+   Keyboard — the `E` shortcut (design §4.2.8)
+   ------------------------------------------------------------------------ */
+
+/**
+ * Is this element a field the user is typing into?
+ *
+ * A keystroke that belongs to a field must never be read as a shortcut, so
+ * the `E` shortcut is ignored while an input, a textarea, a select or a
+ * contenteditable element has the focus.
+ *
+ * @param {EventTarget|null} el
+ * @returns {boolean}
+ */
+function isTypingTarget(el) {
+  if (!el || typeof el !== 'object') return false;
+  const node = /** @type {HTMLElement} */ (el);
+  const tag = node.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  return node.isContentEditable === true;
+}
+
+/**
+ * `E` toggles Edit Mode (design §4.2.8).
+ *
+ * On the stage it is the only way in — the stage covers the toolbar — and on
+ * the file page it mirrors the Edit button. It goes through the same URL
+ * change, so the address bar always states the mode.
+ *
+ * @param {KeyboardEvent} ev
+ */
+function onShortcutKeyDown(ev) {
+  if (ev.defaultPrevented) return;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (ev.key !== 'e' && ev.key !== 'E') return;
+  if (isTypingTarget(document.activeElement)) return;
+  if (isTypingTarget(ev.target)) return;
+
+  ev.preventDefault();
+  onEditClick();
+}
+
 async function boot() {
+  dom.app = document.getElementById('app');
   dom.grid = document.getElementById('grid');
   dom.actions = document.getElementById('toolbar-actions');
   dom.live = document.getElementById('stage-live');
 
   buildToolbar();
+
+  /* The spine starts the way the layout wants it: a column on a wide screen,
+     a closed drawer on a narrow one. */
+  setSpineCollapsed(window.matchMedia(SPINE_DRAWER_QUERY).matches);
 
   // `filepage.js` asks for navigation through an event, so the router stays
   // the only place that touches `location`.
@@ -414,6 +562,9 @@ async function boot() {
     }
     setTimeout(syncFocusWithModule, 0);
   });
+
+  // `E` toggles Edit Mode, in both registers (design §4.2.8).
+  document.addEventListener('keydown', onShortcutKeyDown);
 
   store.subscribe(() => {
     render();

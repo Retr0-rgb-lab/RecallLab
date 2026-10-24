@@ -375,6 +375,21 @@
   min-height: 0;
   overflow: auto;
   padding: 14px 16px;
+
+  /* Scroll shadow. The PiP height is fixed by the spec (300px max), so a long
+     card body will overflow; the two `local` cover layers sit on the content
+     and hide the two `scroll` shadow layers at the extremes, so the shadow only
+     appears on the edge that still has content behind it. Without it the text
+     is clipped at the window edge and does not read as scrollable. */
+  background-image:
+    linear-gradient(to bottom, var(--surface), color-mix(in srgb, var(--surface) 0%, transparent)),
+    linear-gradient(to top, var(--surface), color-mix(in srgb, var(--surface) 0%, transparent)),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.38), transparent),
+    linear-gradient(to top, rgba(0, 0, 0, 0.38), transparent);
+  background-position: top, bottom, top, bottom;
+  background-size: 100% 20px, 100% 20px, 100% 9px, 100% 9px;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .pip-text {

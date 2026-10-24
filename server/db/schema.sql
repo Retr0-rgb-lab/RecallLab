@@ -10,8 +10,12 @@
 -- `ON DELETE CASCADE` is kept as a production safety net. The application
 -- deletes children first and the parent last, inside one transaction, so the
 -- database cascade normally finds nothing left to remove.
+--
+-- Every statement is idempotent (`if not exists`). The same file is applied to
+-- pg-mem at boot and to a real Postgres database on its first connection, so
+-- applying it twice must be a no-op rather than an error.
 
-create table nodes (
+create table if not exists nodes (
   id          uuid primary key,
   parent_id   uuid references nodes(id) on delete cascade,
   kind        text    not null check (kind in ('folder', 'card')),
@@ -23,5 +27,5 @@ create table nodes (
   updated_at  timestamptz not null default now()
 );
 
-create index nodes_parent_position_idx on nodes (parent_id, position);
-create index nodes_parent_idx on nodes (parent_id);
+create index if not exists nodes_parent_position_idx on nodes (parent_id, position);
+create index if not exists nodes_parent_idx on nodes (parent_id);

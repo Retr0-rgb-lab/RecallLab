@@ -109,8 +109,9 @@ fresh copy. No external service, no configuration.
 
 **With `DATABASE_URL`.** The app boots on real Postgres through `pg`. **Postgres mode does not
 seed itself.** Run `npm run seed` once against that database, or the tree is empty. The `nodes`
-table comes from `server/db/schema.sql`; `scripts/deploy.sh` applies it when the target database
-does not have it yet.
+table comes from `server/db/schema.sql`, which is written to be idempotent (`create table if not
+exists`) and is applied by the server on first connect, so the table is created on boot even
+against a fresh database. `scripts/deploy.sh` applies it too, before seeding.
 
 **`vercel dev` is the preferred way to run the app locally.** It serves the app the way production
 does — with the rewrite rule and the cron route in place — instead of the bare Express app.
@@ -358,8 +359,8 @@ in the Supabase dashboard. See *Keep-alive* above.
 `Authorization: Bearer <CRON_SECRET>`. Add the header, or unset the variable for local work.
 
 **The tree is empty in production.** Postgres mode does not auto-seed. Run
-`DATABASE_URL='…' npm run seed` against the hosted database, and make sure the `nodes` table
-exists (`server/db/schema.sql`).
+`DATABASE_URL='…' npm run seed` against the hosted database. The `nodes` table is created
+automatically on boot (`server/db/schema.sql` is idempotent), so only the seed is ever missing.
 
 **`/api/health` reports `"mode":"memory"`.** `DATABASE_URL` did not reach the deployment. Check
 `vercel env ls` and redeploy. In this mode the data lives in memory and is discarded on every

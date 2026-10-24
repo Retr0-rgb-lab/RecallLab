@@ -18,6 +18,11 @@
  *
  * `pg-mem` is imported dynamically and only inside the memory branch, so a
  * production bundle that does not install devDependencies still boots.
+ *
+ * The schema (`schema.sql`) is applied in BOTH modes: to pg-mem when the
+ * in-memory database is created, and to Postgres on the first connection. The
+ * DDL is idempotent, so applying it on every boot never breaks an existing
+ * database.
  */
 
 import fs from 'node:fs';
@@ -30,6 +35,18 @@ export function dbMode() {
 }
 
 let backendPromise = null;
+
+/**
+ * The schema, read from disk.
+ *
+ * The file is idempotent (`create table if not exists`), so the same text is
+ * applied to pg-mem and to a real Postgres database, on every boot.
+ *
+ * @returns {string} the SQL of `schema.sql`
+ */
+function readSchema() {
+  return fs.readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
+}
 
 /**
  * Build the backend once, lazily, so importing this module never performs
@@ -45,6 +62,26 @@ async function createBackend() {
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
     });
+
+    /*
+     * The schema is applied on the first connection. A fresh database has no
+     * `nodes` table, and every request against it would fail with
+     * `relation "nodes" does not exist`. The DDL is idempotent, so applying it
+     * on every boot is safe: an existing database is left exactly as it is.
+     *
+     * The whole file is sent as one simple query — Postgres runs the
+     * statements in order, and `pg` allows several statements in one query
+     * when no parameters are bound.
+     */
+    try {
+      await pool.query(readSchema());
+    } catch (err) {
+      await pool.end().catch(() => {});
+      throw new Error(
+        `[recalllab] could not apply the schema to the Postgres database: ${err.message}`,
+      );
+    }
+
     return { pool, memDb: null };
   }
 
@@ -69,7 +106,7 @@ async function createBackend() {
       value === null || value === undefined ? null : String(value).length,
   });
 
-  const schema = fs.readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
+  const schema = readSchema();
   memDb.public.none(schema);
 
   // The pg adapter gives pg-mem the same `pg` driver surface as production.

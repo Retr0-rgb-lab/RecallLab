@@ -47,6 +47,11 @@ the affected sections, before downstream work proceeds.
 | Date | Change | Reason | Affected |
 |---|---|---|---|
 | 2026-10-24 | Initial specification | — | — |
+| 2026-10-24 | **Build wave 1** — schema portability: `pgcrypto` and `gen_random_uuid()` dropped, UUIDs generated in the application, cascade delete performed by the application | One schema must run on real Postgres and on the in-memory Postgres used for zero-dependency local development; neither supports `pgcrypto` | §5.1, §6.1 |
+| 2026-10-24 | **Build wave 1** — dark-register `ink-2` / `ink-3` corrected to `#D4D4D8` / `#A1A1AA`; `hairline-strong` given a dark value `#3F3F46` | The design spec summary and the visual system disagreed; the visual system is the more detailed table and the only one consistent with the contrast rules in §8.1 | §8.1 |
+| 2026-10-24 | **Build wave 1** — type tokens are sizes, not `font` shorthands; each step ships `--t-*` (size) plus `--lh-*`, `--fw-*`, `--track-*` companions | A `--t-*` declared as a `font` shorthand is invalid in `font-size: var(--t-*)` and silently falls back | §8.4, visual system §3 |
+| 2026-10-24 | **Build wave 3** — four integration defects closed: Postgres mode now applies the schema on boot; `focus.js` emits the `[data-edit]` hooks so Edit Mode works over a focused card; the `E` shortcut is bound; the spine collapse toggle sets `data-spine` | Six build agents wrote the parts independently and the parts had never been run together | §4.2.8, §4.3, §5.1, §6.1 |
+| 2026-10-24 | **Build wave 3** — font files renamed to `geist-latin-{400,500,600}.woff2` / `geist-mono-latin-400.woff2` | The files had been downloaded with a `-normal` suffix that neither `tokens.css` nor `index.html` referenced, so every font request was 404ing | visual system §3 |
 
 ---
 

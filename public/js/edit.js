@@ -1112,10 +1112,17 @@ function onDocumentKeyDown(ev) {
   if (record) {
     /* A keystroke inside an editor belongs to the editor: the owners must not
        read it as "open this tile" or "leave Focus Mode". */
-    if (ev.key === 'Enter' && (record.kind === 'title' || ev.metaKey || ev.ctrlKey)) {
-      ev.preventDefault();
+    if (ev.key === 'Enter') {
+      if (record.kind === 'title' || ev.metaKey || ev.ctrlKey) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        record.input.blur();
+        return;
+      }
+      /* A plain Enter in a textarea is a newline. The newline is the default
+         action of the key, so stopping the propagation is enough — and the
+         file page must not read it as "open this tile". */
       ev.stopPropagation();
-      record.input.blur();
       return;
     }
     if (ev.key === ' ' || ev.key === 'Spacebar' || ev.key.startsWith('Arrow')) {
