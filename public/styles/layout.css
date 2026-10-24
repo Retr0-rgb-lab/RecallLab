@@ -229,6 +229,10 @@
 
 .crumb + .crumb::before {
   content: "›";
+  /* The pseudo-element is an inline box by default, and horizontal margins
+     do not apply to inline boxes — the separator would sit flush against
+     both segments. inline-block makes the gap real. */
+  display: inline-block;
   margin: 0 var(--crumb-gap);
   color: var(--ink-3);
 }

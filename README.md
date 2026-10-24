@@ -103,7 +103,7 @@ npm start                 # http://localhost:3000
 There are two ways to run the app, and they differ in what they do with the database.
 
 **Without `DATABASE_URL` (the default).** The app boots on pg-mem, an in-memory Postgres, and
-seeds the COMP3421 tree automatically at boot — 26 nodes, the real course structure rather than
+seeds the COMP3421 tree automatically at boot — 42 nodes, the real course structure rather than
 "Folder 1 / Card 1". The data is discarded when the process exits and the next boot starts from a
 fresh copy. No external service, no configuration.
 

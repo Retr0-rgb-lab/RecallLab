@@ -513,7 +513,12 @@ function renderBreadcrumb() {
 
     if (isLast) {
       const current = document.createElement('span');
-      current.className = 'crumb-current';
+      // It carries BOTH classes: `.crumb-current` styles it as the current
+      // segment, and `.crumb` is what the sibling separator
+      // (`.crumb + .crumb::before`) and the `.crumb[aria-current="page"]`
+      // rule both match on. Without `.crumb` the current segment gets no
+      // separator and sits flush against its predecessor.
+      current.className = 'crumb crumb-current';
       current.setAttribute('aria-current', 'page');
       current.textContent = node.title;
       frag.appendChild(current);
