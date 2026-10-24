@@ -1,0 +1,23 @@
+{
+  "name": "recalllab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RecallLab - a spatial recall reader for hierarchical course material. COMP3421 final project.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/db/seed.js",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
+  }
+}
